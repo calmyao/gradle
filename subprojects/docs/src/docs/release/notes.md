@@ -30,6 +30,10 @@ in the next major Gradle version (Gradle 5.0). See the User guide section on the
 
 The following are the newly deprecated items in this Gradle release. If you have concerns about a deprecation, please raise it via the [Gradle Forums](https://discuss.gradle.org).
 
+### Deprecation of `-a`
+
+`-a`/`--no-rebuild` option was introduced in very early version of Gradle. Now it was deprecated and is scheduled to be removed in Gradle 5.0.
+
 <!--
 ### Example deprecation
 -->
