@@ -17,6 +17,7 @@ package org.gradle.integtests;
 
 import org.gradle.integtests.fixtures.AbstractIntegrationTest;
 import org.gradle.integtests.fixtures.executer.ExecutionFailure;
+import org.gradle.integtests.fixtures.executer.ExecutionResult;
 import org.gradle.test.fixtures.file.TestFile;
 import org.junit.Test;
 
@@ -217,9 +218,48 @@ public class ProjectLoadingIntegrationTest extends AbstractIntegrationTest {
                 "}");
         testFile("subdirectory/gradle.properties").write("prop=value");
 
-        inDirectory(subDirectory).withSearchUpwards().withTasks("do-stuff").run();
-        usingProjectDir(subDirectory).withSearchUpwards().withTasks("do-stuff").run();
-        usingBuildFile(buildFile).withSearchUpwards().withTasks("do-stuff").run();
+        inDirectory(subDirectory).withSearchUpwards().withTasks("do-stuff").expectDeprecationWarning().run();
+        usingProjectDir(subDirectory).withSearchUpwards().withTasks("do-stuff").expectDeprecationWarning().run();
+        usingBuildFile(buildFile).withSearchUpwards().withTasks("do-stuff").expectDeprecationWarning().run();
+    }
+
+    @Test
+    public void deprecationWarningAppearsWhenNestedBuildHasNoSettingsFile() {
+        testFile("settings.gradle").write("include 'another'");
+
+        TestFile subDirectory = getTestDirectory().file("sub");
+        TestFile subBuildFile = subDirectory.file("sub.gradle").write("");
+        subDirectory.file("build.gradle").write("");
+
+        ExecutionResult result = inDirectory(subDirectory).withSearchUpwards().withTasks("help").expectDeprecationWarning().run();
+        result.assertOutputContains("Support for nested build without a 'settings.gradle' was deprecated and will be removed in Gradle 5.0. You should create a empty settings.gradle in " + subDirectory.getAbsolutePath());
+
+        result = usingBuildFile(subBuildFile).inDirectory(subDirectory).withSearchUpwards().withTasks("help").expectDeprecationWarning().run();
+        result.assertOutputContains("Support for nested build without a 'settings.gradle' was deprecated and will be removed in Gradle 5.0. You should create a empty settings.gradle in " + subDirectory.getAbsolutePath());
+
+        result = usingProjectDir(subDirectory).withSearchUpwards().withTasks("help").expectDeprecationWarning().run();
+        result.assertOutputContains("Support for nested build without a 'settings.gradle' was deprecated and will be removed in Gradle 5.0. You should create a empty settings.gradle in " + subDirectory.getAbsolutePath());
+    }
+
+    @Test
+    public void noDeprecationWarningAppearsWhenNestedBuildHasSettingsFile() {
+        testFile("settings.gradle").write("include 'another'");
+
+        TestFile subDirectory = getTestDirectory().file("sub");
+        TestFile subSettingsFile = subDirectory.file("renamed_settings.gradle").write("");
+        subDirectory.file("build.gradle").write("");
+
+        inDirectory(subDirectory).usingSettingsFile(subSettingsFile).withSearchUpwards().withTasks("help").run();
+
+        usingProjectDir(getTestDirectory()).inDirectory(subDirectory).withSearchUpwards().withTasks("help").run();
+    }
+
+    @Test
+    public void noDeprecationWarningAppearsWhenOutsideBuildUsesAnotherBuildFile() {
+        testFile("settings.gradle").write("include 'another'");
+        TestFile renamedBuildGradle = getTestDirectory().file("renamed_build.gradle").createFile();
+
+        usingBuildFile(renamedBuildGradle).inDirectory(getTestDirectory()).withSearchUpwards().withTasks("help").run();
     }
 
     @Test
