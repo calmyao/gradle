@@ -28,6 +28,10 @@ Gradle now suppoprts version range in parent elements of POM, which was introduc
 IMPORTANT: if this is a patch release, ensure that a prominent link is included in the foreword to all releases of the same minor stream.
 Add-->
 
+### Eclipse plugin separates output folders
+
+The `eclipse` plugin now defines separate output directories for each source folders. Also, each source folder and dependency defines an additional `gradle_source_sets` classpath attribute. The attribute specifies to which sourceSet the entry belonged. Future [Buildship](http://eclipse.org/buildship) versions will use this information to separate source sets when launching Java applications within Eclipse.
+
 <!--
 ### Example new and noteworthy
 -->
@@ -68,6 +72,10 @@ The following are the newly deprecated items in this Gradle release. If you have
 <!--
 ### Example breaking change
 -->
+
+### Changes in the `eclipse` plugin
+
+The default output location in [EclipseClasspath](dsl/org.gradle.plugins.ide.eclipse.model.EclipseClasspath.html#org.gradle.plugins.ide.eclipse.model.EclipseClasspath:defaultOutputDir) changed from `${project.projectDir}/bin` to `${project.projectDir}/bin/default`.
 
 ## External contributions
 
